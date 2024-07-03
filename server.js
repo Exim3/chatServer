@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
@@ -16,6 +16,7 @@ require("./db/connection");
 
 // Import the user model
 const UserModel = require("./models/users");
+const ConversationModel = require("./models/conversation");
 
 // Routes
 app.get("/", (req, res) => {
@@ -83,16 +84,27 @@ app.post("/api/login", async (req, res) => {
         user.token = token;
         await user.save();
 
-        res
-          .status(200)
-          .json({
-            user: { email: user.email, fullname: user.fullname },
-            token,
-          });
+        res.status(200).json({
+          user: { email: user.email, fullname: user.fullname },
+          token,
+        });
       }
     );
   } catch (err) {
     res.status(500).send("Error logging in");
+  }
+});
+
+app.post("/", async (req, res) => {
+  try {
+    const { senderId, recieverId } = req.body;
+    const newConversation = new ConversationModel({
+      member: [senderId, recieverId],
+    });
+    await newConversation.save();
+    res.status(200).send("Conversation created successfully");
+  } catch (err) {
+    console.log(err);
   }
 });
 

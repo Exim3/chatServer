@@ -3,7 +3,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const io = require("socket.io")(8080, {
+const io = require("socket.io")(3001, {
   cors: {
     origin: "http://localhost:5173",
   },
@@ -27,49 +27,49 @@ const ConversationModel = require("./models/conversation");
 const MessageModel = require("./models/messages");
 
 //socket.io
-let users = [];
+// let users = [];
 
-io.on("connection", (socket) => {
-  console.log("user Connected", socket.id);
+// io.on("connection", (socket) => {
+//   console.log("user Connected", socket.id);
 
-  socket.on("addUser", (userId) => {
-    const isUserExit = users.find((user) => user.userId === userId);
-    if (!isUserExit) {
-      const user = { userId, socketId: socket.id };
-      users.push(user);
-      io.emit("getUsers", users);
-    }
-  });
-  socket.on(
-    "sendMessage",
-    async ({ senderId, recieverId, conversationId, message }) => {
-      console.log(recieverId, "recieverId");
-      const reciever = users.find((user) => user.userId === recieverId);
-      const sender = users.find((user) => user.userId === senderId);
-      const user = await UserModel.findById(senderId);
-      console.log("hii");
-      const newMessage = {
-        senderId,
-        recieverId,
-        conversationId,
-        message,
-        user: { _id: user._id, fullname: user.fullname, email: user.email },
-      };
+//   socket.on("addUser", (userId) => {
+//     const isUserExit = users.find((user) => user.userId === userId);
+//     if (!isUserExit) {
+//       const user = { userId, socketId: socket.id };
+//       users.push(user);
+//       io.emit("getUsers", users);
+//     }
+//   });
+//   socket.on(
+//     "sendMessage",
+//     async ({ senderId, recieverId, conversationId, message }) => {
+//       console.log(recieverId, "recieverId");
+//       const reciever = users.find((user) => user.userId === recieverId);
+//       const sender = users.find((user) => user.userId === senderId);
+//       const user = await UserModel.findById(senderId);
+//       console.log("hii");
+//       const newMessage = {
+//         senderId,
+//         recieverId,
+//         conversationId,
+//         message,
+//         user: { _id: user._id, fullname: user.fullname, email: user.email },
+//       };
 
-      if (reciever) {
-        console.log("Message sent to receiver:", reciever.socketId);
-        io.to(reciever.socketId).emit("getMessage", newMessage);
-      }
-      console.log("Message sent to sender:", sender.socketId);
-      io.to(sender.socketId).emit("getMessage", newMessage);
-    }
-  );
+//       if (reciever) {
+//         console.log("Message sent to receiver:", reciever.socketId);
+//         io.to(reciever.socketId).emit("getMessage", newMessage);
+//       }
+//       console.log("Message sent to sender:", sender.socketId);
+//       io.to(sender.socketId).emit("getMessage", newMessage);
+//     }
+//   );
 
-  socket.on("disconnect", () => {
-    users = users.filter((user) => user.socketId !== socket.id);
-    io.emit("getUsers", users);
-  });
-});
+//   socket.on("disconnect", () => {
+//     users = users.filter((user) => user.socketId !== socket.id);
+//     io.emit("getUsers", users);
+//   });
+// });
 
 // Routes
 app.get("/", (req, res) => {
@@ -96,7 +96,7 @@ app.post("/api/register", async (req, res) => {
     });
     await newUser.save();
 
-    res.status(201).send("User registered successfully");
+    res.status(200).send("User registered successfully");
   } catch (err) {
     res.status(500).send("Error registering user");
   }
@@ -268,7 +268,7 @@ app.get("/api/users/:userId", async (req, res) => {
           user: {
             email: user.email,
             fullname: user.fullname,
-            recieverId: user._id,
+            _id: user._id,
           },
         };
       })

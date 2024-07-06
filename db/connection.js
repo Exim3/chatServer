@@ -1,13 +1,9 @@
 const moongoose = require("mongoose");
 
-const url =
-  "mongodb+srv://exim3:MaatMari04@cluster0.mty1n3d.mongodb.net/?appName=Cluster0";
+const url = "mongodb://localhost:27017/chatBox";
 
 moongoose
-  .connect(url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(url)
   .then(() => {
     console.log("Successfully connected to MongoDB with Mongoose!");
   })

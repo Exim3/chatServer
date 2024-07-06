@@ -10,3 +10,8 @@ moongoose
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
   });
+
+// shared
+// vps-with nodejs
+// dedicated
+// host;

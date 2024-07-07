@@ -33,8 +33,11 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (userId) => {
     const isUserExit = users.find((user) => user.userId === userId);
+    console.log("otha");
     if (!isUserExit) {
+      console.log("kommala");
       const user = { userId, socketId: socket.id };
+      console.log("kommala", user);
       users.push(user);
       io.emit("getUsers", users);
     }
@@ -43,6 +46,8 @@ io.on("connection", (socket) => {
     "sendMessage",
     async ({ senderId, recieverId, conversationId, message }) => {
       console.log(recieverId, "recieverId");
+      console.log(senderId, "senderId");
+      console.log(users, "users after");
       const reciever = users.find((user) => user.userId === recieverId);
       const sender = users.find((user) => user.userId === senderId);
       const user = await UserModel.findById(senderId);
@@ -54,13 +59,14 @@ io.on("connection", (socket) => {
         message,
         user: { _id: user._id, fullname: user.fullname, email: user.email },
       };
-
+      // console.log("Message sent to receiver:", reciever?.socketId);
       if (reciever) {
-        console.log("Message sent to receiver:", reciever.socketId);
-        io.to(reciever.socketId).emit("getMessage", newMessage);
+        console.log("Message sent to receiver:", reciever?.socketId);
+        io.to(reciever?.socketId).emit("getMessage", newMessage);
       }
-      console.log("Message sent to sender:", sender.socketId);
-      io.to(sender.socketId).emit("getMessage", newMessage);
+      console.log("Message sent to sender:", sender?.socketId);
+      io.to(sender?.socketId).emit("getMessage", newMessage);
+      // io.emit("getMessage", newMessage);
     }
   );
 
@@ -260,26 +266,36 @@ app.get("/api/message/:conversationId", async (req, res) => {
 app.get("/api/users/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
+
     const users = await UserModel.find({ _id: { $ne: userId } });
-    const userData = Promise.all(
-      users.map(async (user) => {
-        const check = await ConversationModel.find({
-          members: { $all: [userId, user._id] },
-        });
-        if (!check) {
-          return {
-            user: {
-              email: user.email,
-              fullname: user.fullname,
-              _id: user._id,
-            },
-          };
-        }
-      })
-    );
-    res.status(200).json(await userData);
+
+    const userDataPromises = users.map(async (user) => {
+      const recieverId = user._id.toString();
+      const conversation = await ConversationModel.findOne({
+        members: { $all: [userId, recieverId] },
+      });
+
+      if (!conversation) {
+        return {
+          user: {
+            email: user.email,
+            fullname: user.fullname,
+            _id: user._id,
+          },
+        };
+      }
+
+      return null;
+    });
+
+    const userData = await Promise.all(userDataPromises);
+
+    const filteredUserData = userData.filter((data) => data !== null);
+
+    res.status(200).json(filteredUserData);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

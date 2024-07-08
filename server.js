@@ -33,11 +33,11 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (userId) => {
     const isUserExit = users.find((user) => user.userId === userId);
-    console.log("otha");
+    // console.log("user exit");
     if (!isUserExit) {
-      console.log("kommala");
+      // console.log("user not exit");
       const user = { userId, socketId: socket.id };
-      console.log("kommala", user);
+      // console.log("user not", user);
       users.push(user);
       io.emit("getUsers", users);
     }
@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
         recieverId,
         conversationId,
         message,
-        user: { _id: user._id, fullname: user.fullname, email: user.email },
+        user: { _id: user?._id, fullname: user?.fullname, email: user?.email },
       };
       // console.log("Message sent to receiver:", reciever?.socketId);
       if (reciever) {
